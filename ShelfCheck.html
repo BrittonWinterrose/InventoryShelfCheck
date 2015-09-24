@@ -1,0 +1,138 @@
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js?onload=init"></script>
+<script src="https://apis.google.com/js/auth.js?onload=init"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <!--This section is the main product page-->
+    <div class ="row">
+        <div class="col-xs-1"></div>
+        <div id='title' class="col-xs-10"><h3><strong>BD Shelf Check App</strong></h3></p></div>
+        <div class="col-xs-1"></div>
+    </div>
+    <div class ="row">
+        <div class="col-xs-1"></div>
+            <div class="entry form-group col-xs-4">
+                <div class="input-group">
+                    <span class="input-group-addon"><strong>Location</strong></span>
+                    <input class="form-control" id="loc" name="fields[]" type="text" placeholder="">
+                  <span class="input-group-btn">
+                      <button class="btn btn-primary btn-add" id="Button1" type="button">GO!</button>
+                  </span>
+                </div>
+            </div>
+        <div class="col-xs-7"></div>
+    </div>
+    <div class ="row">
+        <div class="col-xs-1"></div>
+        <div class="col-xs-10">
+            <p class ="table-responsive table-condensed table-striped"><span id='p2'>Items Will Display Here</span></p>
+        </div>
+        <div class="col-xs-1"></div>
+    </div>
+
+    <p class ="ReturnApp"><span id='p6'></span></p>
+    <p class ="ReturnApp"><span id='p7'></span></p>
+    <p class ="ReturnApp"><span id='p8'></span></p>
+
+
+        <div class="col-sm-1"></div>
+<script type="text/javascript">
+
+// REPLACE GOOGLE SPREADSHEET URL WITH YOUR OWN SPREADSHEET'S URL
+        var googleSpreadsheetUrl = "1zpr9EPaNJ_2FOCCV7ca0iAjjeIV9H59tI6gVNso28qE";
+        var loc;
+        var url;
+        var query = encodeURIComponent('select A, B, C, E where D =');
+        var query2;
+        var qry;
+
+    //Listener for first Page Button
+        listener = document.getElementById("Button1").addEventListener("click", function(){
+            myFormula();
+            return false;
+            });
+
+        //Will validate and retrieve values from imput fields, initiates osCheck()
+        function myFormula() {
+            loc = document.getElementById("loc").value;
+            query2 = encodeURIComponent('"' + loc + '"');
+            qry = query + query2;
+            url = 'http://docs.google.com/a/google.com/spreadsheets/d/'
+        + googleSpreadsheetUrl
+        + '/gviz/tq?tqx=out:json&tq='
+        + qry;
+            console.log(loc);
+            console.log(qry);
+            console.log(url);
+            osLookup();
+        };
+
+        //Checks Overstock entries adn modifies DOM to either the is/isnot in OS page
+        function osLookup() {
+            var request = new XMLHttpRequest();
+            console.log("REQUEST: " + request);
+            request.open('GET', url, true);
+
+            request.onload = function() {
+                if (this.status >= 200 && this.status < 400) {
+                    console.log("STATUS: Success!");
+                    var arry = this.response;
+                    console.log(arry);
+                    var arry2 = arry.replace(/([\s\S]+"rows":)|\}\}\)\;/g,"")
+                    console.log(arry2);
+                    var rp1 = arry2.replace(/"f":"/g,'"$":"');
+                    console.log(rp1);
+                    var rp2 = rp1.replace(/"v":"/g, '"Description":"');
+                    var rp3 = rp2.replace(/"v":\d{1,4}\.+0\,{1}(.*?)"\$"/g, '"Qty"');
+                    var rp4 = rp3.replace(/"v":\d\.\d{5,8}(.*?)[E]\d(.*?)"\$"/g, '"UPC"');
+                    var rp5 = rp4.replace(/"v":new Date(.*?)\$"/g, '"Timestamp"');
+                    var rp6 = rp5.replace(/\}|\{|"c":/g, "")
+                    var rp7 = rp6.replace(/\[/g, "{")
+                    var rp8 = rp7.replace(/\]/g, "}")
+                    var rp9 = rp8.replace(/\{\{/g, "[{")
+                    var rp10 = rp9.replace(/\}\}/g, "}]")
+                    console.log(rp2);
+                    console.log(rp3);
+                    console.log(rp4);
+                    console.log(rp5);
+                    console.log(rp6);
+                    console.log(rp7);
+                    console.log(rp8);
+                    console.log(rp9);
+                    console.log(rp10);
+                    var arr = JSON.parse(rp10)
+                    console.log(arr)
+                    var out = '<table class="table table-condensed"><tr><th>QTY</th><th>UPC</th><th>Description</th><th>Timestamp</th></tr>';
+                    for(i = 0; i < arr.length; i++) {
+                        out += "<tr><td><strong>" +
+                        arr[i].Qty +
+                        "</strong></td><td>" +
+                        arr[i].UPC +
+                        "</td><td><strong>" +
+                        arr[i].Description +
+                        "</strong></td><td>" +
+                        arr[i].Timestamp +
+                        "</td></tr>";
+                    }
+                    out += "</table>"
+                    document.getElementById('p2').innerHTML = out;
+
+                } else {
+                    console.log("STATUS: ERROR - We reached our target server, but it returned an error");
+                }
+            };
+            request.onerror = function() {
+                console.log("There was a connection error of some sort");
+                };
+
+            request.send();
+            console.log("ref'd Info: " + totQty);
+        }
+</script>
+</body>
+</html>
